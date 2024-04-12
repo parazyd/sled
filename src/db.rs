@@ -294,7 +294,10 @@ impl<const LEAF_FANOUT: usize> Db<LEAF_FANOUT> {
             if let Err(e) = spawn_res {
                 return Err(io::Error::new(
                     io::ErrorKind::Other,
-                    format!("unable to spawn flusher thread for sled database: {:?}", e)
+                    format!(
+                        "unable to spawn flusher thread for sled database: {:?}",
+                        e
+                    ),
                 ));
             }
         }
@@ -460,6 +463,16 @@ impl<const LEAF_FANOUT: usize> Db<LEAF_FANOUT> {
 
     pub fn contains_tree<V: AsRef<[u8]>>(&self, name: V) -> io::Result<bool> {
         Ok(self.collection_name_mapping.get(name.as_ref())?.is_some())
+    }
+
+    /// Returns the tree names saved in this Db.
+    pub fn tree_names(&self) -> io::Result<Vec<InlineArray>> {
+        let mut trees = vec![];
+        for elem in self.collection_name_mapping.iter() {
+            trees.push(elem?.0);
+        }
+
+        Ok(trees)
     }
 
     pub fn drop_tree<V: AsRef<[u8]>>(&self, name: V) -> io::Result<bool> {
